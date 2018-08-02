@@ -40,7 +40,7 @@ private:
 	void GetLoginUrl();
 	pplx::task<void> get_secret(utility::string_t secretName);
 	pplx::task<void> get_key(utility::string_t secretName);
-	pplx::task<void> sign(utility::string_t secretName);
+	pplx::task<void> sign(utility::string_t secretName, utility::string_t, utility::string_t );
 	pplx::task<void> verify(utility::string_t secretName, utility::string_t signValue);
 
 	utility::string_t NewGuid();
@@ -51,10 +51,10 @@ public:
 		utility::string_t& username, utility::string_t& password, utility::string_t& keyVaultName, utility::string_t& subscriptionID);
 	bool GetSecretValue(utility::string_t secretName, web::json::value& secret);
 	bool GetKeyValue(utility::string_t secretName, web::json::value& key);
-	bool GetSignature(utility::string_t secretName, web::json::value& signature);
+	bool GetSignature(utility::string_t secretName, utility::string_t, utility::string_t, web::json::value& signature);
 	bool GetVerification(utility::string_t secretName, utility::string_t signValue, web::json::value& verification);
 	pplx::task<void> listSubscriptions();
-	pplx::task<void> createKey();
+	pplx::task<void> createKey(utility::string_t& keyname, utility::string_t& keytype, utility::string_t& keysize);
 };
 
 #endif

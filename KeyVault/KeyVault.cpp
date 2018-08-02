@@ -1,7 +1,6 @@
 #include "KeyVault.h"
 
-utility::string_t algorithm = _XPLATSTR("RS384");
-utility::string_t string1 = _XPLATSTR("BD3FF47540B31E62D4CA6B07794E5A886B0F655FC322730F26ECD65CC7DD5C90");
+
 //////////////////////////////////////////////////////////////////////////////
 // helper to generate a new guid (currently Linux specific, for Windows we 
 // should use ::CoCreateGuid() 
@@ -125,20 +124,20 @@ pplx::task<void> KeyVault::get_key(utility::string_t secretName)
 		}
 	});
 }
-bool KeyVault::GetSignature(utility::string_t key, web::json::value& signature)
+bool KeyVault::GetSignature(utility::string_t kid, utility::string_t algorithm, utility::string_t string1, web::json::value& signature)
 {
-	sign(key).wait();
+	sign(kid,algorithm,string1).wait();
 	signature = this->signature;
 	return this->status_code == 200;
 }
 
-pplx::task<void> KeyVault::sign(utility::string_t kid)
+pplx::task<void> KeyVault::sign(utility::string_t kid, utility::string_t algorithm, utility::string_t string1)
 {
 	auto impl = this;
 	// create the url path to query the keyvault key
 	utility::string_t url = kid + _XPLATSTR("/sign?api-version=2015-06-01");
 
-	//std::wcout << url << std::endl;
+	std::wcout << url << std::endl;
 	web::http::client::http_client client(url);
 
 	web::json::value postData;
@@ -155,13 +154,13 @@ pplx::task<void> KeyVault::sign(utility::string_t kid)
 	request.headers().add(_XPLATSTR("Authorization"), impl->tokenType + _XPLATSTR(" ") + impl->accessToken);
 	request.set_body(postData);
 
-	//std::wcout << request.to_string() << std::endl;
+	std::wcout << request.to_string() << std::endl;
 	// response from IDP is a JWT Token that contains the token type and access token we need for
 	// Azure HTTP REST API calls
 	return client.request(request).then([impl](web::http::http_response response)
 	{
 
-		//std::wcout << response.to_string() << std::endl;
+		std::wcout << response.to_string() << std::endl;
 
 		impl->status_code = response.status_code();
 		if (impl->status_code == 200) {
@@ -196,8 +195,8 @@ pplx::task<void> KeyVault::verify(utility::string_t kid, utility::string_t signV
 
 	web::json::value postData;
 
-	postData[L"alg"] = web::json::value::string(algorithm);
-	postData[L"digest"] = web::json::value::string(string1);
+//	postData[L"alg"] = web::json::value::string(algorithm);
+//	postData[L"digest"] = web::json::value::string(string1);
 	postData[L"value"] = web::json::value::string(signValue);
 
 
@@ -357,9 +356,9 @@ pplx::task<void>  KeyVault::listSubscriptions() {
 		}
 	});
 }
-pplx::task<void>  KeyVault::createKey() {
+pplx::task<void>  KeyVault::createKey(utility::string_t& keyname, utility::string_t& keytype, utility::string_t& keysize) {
 	auto impl = this;
-	utility::string_t keyname = _XPLATSTR("key-name");
+	//utility::string_t keyname = _XPLATSTR("key-name");
 
 	utility::string_t url = _XPLATSTR("https://tf-test-vault.vault.azure.net/keys/") + keyname + _XPLATSTR("/create?api-version=2016-10-01");
 	//utility::string_t url = _XPLATSTR("https://") + impl->keyVaultName + _XPLATSTR(".vault.azure.net/secrets/secretname?api-version=2015-06-01");
@@ -373,8 +372,8 @@ pplx::task<void>  KeyVault::createKey() {
 	request.headers().add(_XPLATSTR("Authorization"), impl->tokenType + _XPLATSTR(" ") + impl->accessToken);
 	web::json::value postData;
 
-	postData[L"kty"] = web::json::value::string(_XPLATSTR("RSA"));
-	postData[L"key_size"] = web::json::value::string(_XPLATSTR("2048"));
+	postData[L"kty"] = web::json::value::string(keytype);
+	postData[L"key_size"] = web::json::value::string(keysize);
 	
 
 	request.set_body(postData);
