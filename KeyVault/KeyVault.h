@@ -41,7 +41,7 @@ private:
 	pplx::task<void> get_secret(utility::string_t secretName);
 	pplx::task<void> get_key(utility::string_t secretName);
 	pplx::task<void> sign(utility::string_t secretName, utility::string_t, utility::string_t );
-	pplx::task<void> verify(utility::string_t secretName, utility::string_t signValue);
+	pplx::task<void> verify(utility::string_t secretName, utility::string_t algorithm, utility::string_t string1, utility::string_t signValue);
 
 	utility::string_t NewGuid();
 	utility::string_t read_response_body(web::http::http_response response);
@@ -52,7 +52,7 @@ public:
 	bool GetSecretValue(utility::string_t secretName, web::json::value& secret);
 	bool GetKeyValue(utility::string_t secretName, web::json::value& key);
 	bool GetSignature(utility::string_t secretName, utility::string_t, utility::string_t, web::json::value& signature);
-	bool GetVerification(utility::string_t secretName, utility::string_t signValue, web::json::value& verification);
+	bool GetVerification(utility::string_t secretName, utility::string_t , utility::string_t, utility::string_t signValue, web::json::value& verification);
 	pplx::task<void> listSubscriptions();
 	pplx::task<void> createKey(utility::string_t& keyname, utility::string_t& keytype, utility::string_t& keysize);
 };

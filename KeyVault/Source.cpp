@@ -29,15 +29,68 @@ utility::string_t blobContainer = _XPLATSTR("");
 
 
 bool verbose = false;
+std::string SHA256hash(std::string);
+std::string SHA384hash(std::string);
+std::string SHA512hash(std::string);
 
-utility::string_t SHA256hash(utility::string_t);
-utility::string_t SHA384hash(utility::string_t);
-utility::string_t SHA512hash(utility::string_t);
-
-utility::string_t to_hex(unsigned char s) {
-	utility::stringstream_t ss;
+std::string to_hex(unsigned char s) {
+	std::stringstream ss;
 	ss << std::hex << (int)s;
 	return ss.str();
+}
+
+const char base64_url_alphabet[] = {
+
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+
+	'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+
+	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'
+
+};
+
+
+
+std::string base64_encoder(unsigned char in) {
+
+	std::string out;
+
+	int val = 0, valb = -6;
+
+	//size_t len = in.length();
+
+	//unsigned int i = 0;
+
+	//for (i = 0; i < len; i++) {
+
+	unsigned char c = in;
+
+	val = (val << 8) + c;
+
+	valb += 8;
+
+	while (valb >= 0) {
+
+		out.push_back(base64_url_alphabet[(val >> valb) & 0x3F]);
+
+		valb -= 6;
+
+	}
+
+	//	}
+
+	if (valb > -6) {
+
+		out.push_back(base64_url_alphabet[((val << 8) >> (valb + 8)) & 0x3F]);
+
+	}
+
+	return out;
+
 }
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -116,8 +169,8 @@ int main(int argc, char* argv[])
 			std::wcout << _XPLATSTR("Enter key name, algorithm and string") << std::endl;
 			utility::string_t keyname = _XPLATSTR("tumisho-key");
 			
-			utility::string_t string1 = _XPLATSTR("hello world");
-			utility::string_t algorithm = _XPLATSTR("RS384");
+			std::string string1 = "hello world";
+			utility::string_t algorithm = _XPLATSTR("RS256");
 
 			if (algorithm == _XPLATSTR("RS256") || algorithm == _XPLATSTR("ES256")) {
 				std::wcout << SHA256hash(string1).c_str() << std::endl;
@@ -131,7 +184,6 @@ int main(int argc, char* argv[])
 			else
 				std::wcout << _XPLATSTR("NOT A VALID ALGORITHM") << std::endl;
 
-			//FIRST GET KEY ID
 			std::wcout << _XPLATSTR("Querying KeyVault for Keys ") << keyname.c_str() << _XPLATSTR("...") << std::endl; 
 			web::json::value jsonKey;
 			bool rc = kvc.GetKeyValue(keyname, jsonKey);
@@ -144,9 +196,11 @@ int main(int argc, char* argv[])
 
 
 			web::json::value jsonSignature;
-			utility::string_t hash = _XPLATSTR("ODExY2Y0NDI3NmIxOGI0ZDRlZGY5NjJjYTBjNWE2MzdkMmFjNGE1MDY2MWZhYjAzNTQ2ZmQ3MTgxYmRjNmFiMmFhMjQ5OGRlNGVhMGJhYWVlMGIzMmFiZWZjMDI4");
+			std::string string = "AAQQUQUQVQUQVQUQVgUQVQUQVgUQVQUQVgZwVQUQVgUQVQUQVgZwVQUQVgUQVQUQ";
+			utility::string_t hash = utility::conversions::to_string_t(string);
+			std::wcout << hash.length() << std::endl;
 
-			bool rc2 = kvc.GetSignature(kid, algorithm, SHA384hash(string1).c_str(), jsonSignature);
+			bool rc2 = kvc.GetSignature(kid, algorithm, hash, jsonSignature);
 
 			if (rc2 == false) {
 				std::wcout << _XPLATSTR("Cant sign") << std::endl;
@@ -155,6 +209,19 @@ int main(int argc, char* argv[])
 
 			utility::string_t signValue = (jsonSignature[_XPLATSTR("value")]).as_string();
 			std::wcout << _XPLATSTR("Signature  : ") << signValue << std::endl;
+
+			web::json::value jsonVerification;
+
+			bool rc3 = kvc.GetVerification(kid, algorithm, hash, signValue, jsonVerification);
+			if (rc3 == false) {
+				std::wcout << _XPLATSTR("Cant verify") << std::endl;
+				return 1;
+			}
+
+			std::wcout << _XPLATSTR("Verification  : ") << jsonVerification << std::endl;
+
+
+
 
 		}
 
@@ -215,23 +282,24 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-utility::string_t SHA256hash(utility::string_t line) {
+std::string SHA256hash(std::string line) {
 	unsigned char hash[SHA256_DIGEST_LENGTH];
 	SHA256_CTX sha256;
 	SHA256_Init(&sha256);
 	SHA256_Update(&sha256, line.c_str(), line.length());
 	SHA256_Final(hash, &sha256);
 
-	utility::string_t output = _XPLATSTR("");
-	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-		output += to_hex(hash[i]);
+	std::string output = "";
+
+	for (int i = 0; i < SHA256_DIGEST_LENGTH ; i++) {
+		output += base64_encoder(output[i]);
 	}
 	return output;
 
 }
 
 
-utility::string_t SHA384hash(utility::string_t line) {
+std::string SHA384hash(std::string line) {
 	unsigned char hash[SHA384_DIGEST_LENGTH];
 
 	SHA512_CTX sha384;
@@ -239,15 +307,17 @@ utility::string_t SHA384hash(utility::string_t line) {
 	SHA384_Update(&sha384, line.c_str(), line.length());
 	SHA384_Final(hash, &sha384);
 
-	utility::string_t output = _XPLATSTR("");
-	for (int i = 0; i < SHA384_DIGEST_LENGTH; i++) {
+	std::string output = "";
+	//output = base64_encoder(hash);
+	for (int i = 0; i < SHA384_DIGEST_LENGTH ; i++) {
 		output += to_hex(hash[i]);
+
 	}
 	return output;
 
 }
 
-utility::string_t SHA512hash(utility::string_t line) {
+std::string SHA512hash(std::string line) {
 	unsigned char hash[SHA512_DIGEST_LENGTH];
 
 	SHA512_CTX sha512;
@@ -255,13 +325,14 @@ utility::string_t SHA512hash(utility::string_t line) {
 	SHA512_Update(&sha512, line.c_str(), line.length());
 	SHA512_Final(hash, &sha512);
 
-	utility::string_t output = _XPLATSTR("");
-	for (int i = 0; i < SHA512_DIGEST_LENGTH; i++) {
-		output += to_hex(hash[i]);
+	std::string output = "";
+	for (int i = 0; i < SHA512_DIGEST_LENGTH ; i++) {
+		output += base64_encoder(hash[i]);
 	}
 	return output;
 
 }
+
 
 
 

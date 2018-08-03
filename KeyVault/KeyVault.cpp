@@ -139,10 +139,10 @@ pplx::task<void> KeyVault::sign(utility::string_t kid, utility::string_t algorit
 
 	std::wcout << url << std::endl;
 	web::http::client::http_client client(url);
-
+	std::wcout << string1.length() << std::endl;
 	web::json::value postData;
-	postData[L"alg"] = web::json::value::string(algorithm);
-	postData[L"value"] = web::json::value::string(string1);
+	postData[U("alg")] = web::json::value::string(algorithm);
+	postData[U("value")] = web::json::value::string(string1);
 
 
 
@@ -178,13 +178,13 @@ pplx::task<void> KeyVault::sign(utility::string_t kid, utility::string_t algorit
 		}
 	});
 }
-bool KeyVault::GetVerification(utility::string_t key, utility::string_t signValue, web::json::value& verification)
+bool KeyVault::GetVerification(utility::string_t key, utility::string_t algorithm, utility::string_t string1, utility::string_t signValue, web::json::value& verification)
 {
-	verify(key, signValue).wait();
+	verify(key, algorithm, string1, signValue).wait();
 	verification = this->verification;
 	return this->status_code == 200;
 }
-pplx::task<void> KeyVault::verify(utility::string_t kid, utility::string_t signValue)
+pplx::task<void> KeyVault::verify(utility::string_t kid, utility::string_t algorithm, utility::string_t string1, utility::string_t signValue)
 {
 	auto impl = this;
 	// create the url path to query the keyvault key
@@ -195,8 +195,8 @@ pplx::task<void> KeyVault::verify(utility::string_t kid, utility::string_t signV
 
 	web::json::value postData;
 
-//	postData[L"alg"] = web::json::value::string(algorithm);
-//	postData[L"digest"] = web::json::value::string(string1);
+	postData[L"alg"] = web::json::value::string(algorithm);
+	postData[L"digest"] = web::json::value::string(string1);
 	postData[L"value"] = web::json::value::string(signValue);
 
 
@@ -228,7 +228,7 @@ pplx::task<void> KeyVault::verify(utility::string_t kid, utility::string_t signV
 			if (err.value() == 0) {
 				utility::string_t target = impl->read_response_body(response);
 				//std::wcout << target << std::endl;
-				//std::wcout << _XPLATSTR("SUCCESS") << std::endl;
+				//std::wcout << _XPLATSTR("Failed") << std::endl;
 			}
 		}
 	});
@@ -396,40 +396,4 @@ pplx::task<void>  KeyVault::createKey(utility::string_t& keyname, utility::strin
 		}
 	});
 }
-//////////////////////////////////////////////////////////////////////////////
-// Read configFile where each line is in format key=value
-//void GetConfig(utility::string_t configFile)
-//{
-//	utility::ifstream_t fin(configFile);
-//	utility::string_t line;
-//	utility::istringstream_t sin;
-//	utility::string_t val;
-//
-//
-//	while (std::getline(fin, line)) {
-//		sin.str(line.substr(line.find(_XPLATSTR("=")) + 1));
-//		sin >> val;
-//		if (line.find(_XPLATSTR("keyVaultName")) != std::string::npos) {
-//			keyVaultName = val;
-//		}
-//		else if (line.find(_XPLATSTR("clientId")) != std::string::npos) {
-//			clientId = val;
-//		}
-//		else if (line.find(_XPLATSTR("username")) != std::string::npos) {
-//			username = val;
-//		}
-//		else if (line.find(_XPLATSTR("password")) != std::string::npos) {
-//			password = val;
-//		}
-//		else if (line.find(_XPLATSTR("blobContainer")) != std::string::npos) {
-//			blobContainer = val;
-//		}
-//		else if (line.find(_XPLATSTR("verbose")) != std::string::npos) {
-//			if (val.find(_XPLATSTR("true")) != std::string::npos) {
-//				verbose = true;
-//			}
-//		}
-//		sin.clear();
-//	}
-//}
 
