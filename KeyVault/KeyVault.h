@@ -17,7 +17,7 @@
 class KeyVault
 {
 public:
-	 utility::string_t tokenType;
+	utility::string_t tokenType;
 	utility::string_t accessToken;
 	utility::string_t keyVaultUrl;
 	utility::string_t loginUrl;

@@ -137,9 +137,9 @@ pplx::task<void> KeyVault::sign(utility::string_t kid, utility::string_t algorit
 	// create the url path to query the keyvault key
 	utility::string_t url = kid + _XPLATSTR("/sign?api-version=2015-06-01");
 
-	std::wcout << url << std::endl;
+	//std::wcout << url << std::endl;
 	web::http::client::http_client client(url);
-	std::wcout << string1.length() << std::endl;
+//	std::wcout << string1.length() << std::endl;
 	web::json::value postData;
 	postData[U("alg")] = web::json::value::string(algorithm);
 	postData[U("value")] = web::json::value::string(string1);
@@ -154,13 +154,13 @@ pplx::task<void> KeyVault::sign(utility::string_t kid, utility::string_t algorit
 	request.headers().add(_XPLATSTR("Authorization"), impl->tokenType + _XPLATSTR(" ") + impl->accessToken);
 	request.set_body(postData);
 
-	std::wcout << request.to_string() << std::endl;
+//	std::wcout << request.to_string() << std::endl;
 	// response from IDP is a JWT Token that contains the token type and access token we need for
 	// Azure HTTP REST API calls
 	return client.request(request).then([impl](web::http::http_response response)
 	{
 
-		std::wcout << response.to_string() << std::endl;
+	//	std::wcout << response.to_string() << std::endl;
 
 		impl->status_code = response.status_code();
 		if (impl->status_code == 200) {

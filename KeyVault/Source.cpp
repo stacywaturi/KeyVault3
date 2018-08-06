@@ -1,7 +1,6 @@
 #include <conio.h>
 #include "KeyVault.h"
-
-#include <openssl/sha.h>
+#include "Hash.h"
 
 
 #ifdef _WIN32
@@ -29,69 +28,8 @@ utility::string_t blobContainer = _XPLATSTR("");
 
 
 bool verbose = false;
-std::string SHA256hash(std::string);
-std::string SHA384hash(std::string);
-std::string SHA512hash(std::string);
-
-std::string to_hex(unsigned char s) {
-	std::stringstream ss;
-	ss << std::hex << (int)s;
-	return ss.str();
-}
-
-const char base64_url_alphabet[] = {
-
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-
-	'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-
-	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-
-	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'
-
-};
 
 
-
-std::string base64_encoder(unsigned char in) {
-
-	std::string out;
-
-	int val = 0, valb = -6;
-
-	//size_t len = in.length();
-
-	//unsigned int i = 0;
-
-	//for (i = 0; i < len; i++) {
-
-	unsigned char c = in;
-
-	val = (val << 8) + c;
-
-	valb += 8;
-
-	while (valb >= 0) {
-
-		out.push_back(base64_url_alphabet[(val >> valb) & 0x3F]);
-
-		valb -= 6;
-
-	}
-
-	//	}
-
-	if (valb > -6) {
-
-		out.push_back(base64_url_alphabet[((val << 8) >> (valb + 8)) & 0x3F]);
-
-	}
-
-	return out;
-
-}
 //////////////////////////////////////////////////////////////////////////////
 //
 #ifdef _WIN32
@@ -101,13 +39,13 @@ int main(int argc, char* argv[])
 #endif
 {
 	
-/*
-	std::wcout << _XPLATSTR("LOGIN") << std::endl;
-	std::wcout << _XPLATSTR("Enter username	:");
-	std::wcin >> username;
-	std::wcout << _XPLATSTR("Enter password	:");
-	std::wcin >> password;*/
-	
+
+	//std::wcout << _XPLATSTR("LOGIN") << std::endl;
+	//std::wcout << _XPLATSTR("Enter username	:");
+	//std::wcin >> username;
+	//std::wcout << _XPLATSTR("Enter password	:");
+	//std::wcin >> password;
+	//
 
 	//std::wcout << _XPLATSTR("LOGIN") << std::endl;
 	KeyVault kvc;
@@ -118,12 +56,13 @@ int main(int argc, char* argv[])
 	//GetConfig(_XPLATSTR("vault.conf"));
 
 
-	
+
 	
 	kvc.Authenticate(clientId, clientSecret, username, password, keyVaultName, subscriptionID).wait();
 	//kvc.listSubscriptions().wait();
 
 	std::wcout << _XPLATSTR("Enter Key vault name") << std::endl;
+	std::wcout << _XPLATSTR("tf-test-vault") << std::endl;
 	//std::wcin >> keyVaultName;
 	///////////////////////////////////////////////////////////////////////////
 	//// Authenticate with Azure AD
@@ -145,6 +84,7 @@ int main(int argc, char* argv[])
 	{
 		if (action == _XPLATSTR("create")) {
 			std::wcout << _XPLATSTR("Enter key name,type and size ") << std::endl;
+			std::wcout << _XPLATSTR("keyname1 RSA 2048") << std::endl;
 			utility::string_t keyname = _XPLATSTR("keyname1");
 			utility::string_t keytype = _XPLATSTR("RSA");
 			utility::string_t keysize = _XPLATSTR("2048");
@@ -167,24 +107,31 @@ int main(int argc, char* argv[])
 
 		else if (action == _XPLATSTR("sign")) {
 			std::wcout << _XPLATSTR("Enter key name, algorithm and string") << std::endl;
+			std::wcout << _XPLATSTR("tumisho-key RS512 string1") << std::endl;
 			utility::string_t keyname = _XPLATSTR("tumisho-key");
 			
-			std::string string1 = "hello world";
-			utility::string_t algorithm = _XPLATSTR("RS256");
+			std::string string1 = "string1";
+			utility::string_t algorithm = _XPLATSTR("RS512");
+			std::string hashed = "";
+
+			Hash hashObj;
 
 			if (algorithm == _XPLATSTR("RS256") || algorithm == _XPLATSTR("ES256")) {
-				std::wcout << SHA256hash(string1).c_str() << std::endl;
+				hashed = hashObj.SHA256hash(string1).c_str();
+				std::wcout << hashObj.SHA256hash(string1).c_str() << std::endl;
 			}
 			else if (algorithm == _XPLATSTR("RS384") || algorithm == _XPLATSTR("ES384")) {
-				std::wcout << SHA384hash(string1).c_str() << std::endl;
+				hashed = hashObj.SHA384hash(string1).c_str();
+				std::wcout << hashObj.SHA384hash(string1).c_str() << std::endl;
 			}
 			else if (algorithm == _XPLATSTR("RS512") || algorithm == _XPLATSTR("ES512")) {
-				std::wcout << SHA512hash(string1).c_str() << std::endl;
+				hashed = hashObj.SHA512hash(string1).c_str();
+				std::wcout << _XPLATSTR("Digest	:") <<  hashObj.SHA512hash(string1).c_str() << std::endl;
 			}
 			else
 				std::wcout << _XPLATSTR("NOT A VALID ALGORITHM") << std::endl;
 
-			std::wcout << _XPLATSTR("Querying KeyVault for Keys ") << keyname.c_str() << _XPLATSTR("...") << std::endl; 
+		//	std::wcout << _XPLATSTR("Querying KeyVault for Keys ") << keyname.c_str() << _XPLATSTR("...") << std::endl; 
 			web::json::value jsonKey;
 			bool rc = kvc.GetKeyValue(keyname, jsonKey);
 
@@ -196,9 +143,8 @@ int main(int argc, char* argv[])
 
 
 			web::json::value jsonSignature;
-			std::string string = "AAQQUQUQVQUQVQUQVgUQVQUQVgUQVQUQVgZwVQUQVgUQVQUQVgZwVQUQVgUQVQUQ";
-			utility::string_t hash = utility::conversions::to_string_t(string);
-			std::wcout << hash.length() << std::endl;
+			utility::string_t hash = utility::conversions::to_string_t(hashed);
+		//	std::wcout << hash.length() << std::endl;
 
 			bool rc2 = kvc.GetSignature(kid, algorithm, hash, jsonSignature);
 
@@ -218,7 +164,7 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 
-			std::wcout << _XPLATSTR("Verification  : ") << jsonVerification << std::endl;
+		//	std::wcout << _XPLATSTR("Verification  : ") << jsonVerification << std::endl;
 
 
 
@@ -282,56 +228,9 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-std::string SHA256hash(std::string line) {
-	unsigned char hash[SHA256_DIGEST_LENGTH];
-	SHA256_CTX sha256;
-	SHA256_Init(&sha256);
-	SHA256_Update(&sha256, line.c_str(), line.length());
-	SHA256_Final(hash, &sha256);
-
-	std::string output = "";
-
-	for (int i = 0; i < SHA256_DIGEST_LENGTH ; i++) {
-		output += base64_encoder(output[i]);
-	}
-	return output;
-
-}
 
 
-std::string SHA384hash(std::string line) {
-	unsigned char hash[SHA384_DIGEST_LENGTH];
 
-	SHA512_CTX sha384;
-	SHA384_Init(&sha384);
-	SHA384_Update(&sha384, line.c_str(), line.length());
-	SHA384_Final(hash, &sha384);
-
-	std::string output = "";
-	//output = base64_encoder(hash);
-	for (int i = 0; i < SHA384_DIGEST_LENGTH ; i++) {
-		output += to_hex(hash[i]);
-
-	}
-	return output;
-
-}
-
-std::string SHA512hash(std::string line) {
-	unsigned char hash[SHA512_DIGEST_LENGTH];
-
-	SHA512_CTX sha512;
-	SHA512_Init(&sha512);
-	SHA512_Update(&sha512, line.c_str(), line.length());
-	SHA512_Final(hash, &sha512);
-
-	std::string output = "";
-	for (int i = 0; i < SHA512_DIGEST_LENGTH ; i++) {
-		output += base64_encoder(hash[i]);
-	}
-	return output;
-
-}
 
 
 
