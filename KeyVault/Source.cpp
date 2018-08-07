@@ -155,14 +155,20 @@ int main(int argc, char* argv[])
 
 			utility::string_t signValue = (jsonSignature[_XPLATSTR("value")]).as_string();
 			std::wcout << _XPLATSTR("Signature  : ") << signValue << std::endl;
+			
+			std::wcout << _XPLATSTR("Decoding digest") << std::endl;
 
-			web::json::value jsonVerification;
+			std::string unhashed = "";
+			unhashed = hashObj.decodeURL(hashed);
+			std::wcout << _XPLATSTR("Decoded digest:	")<<unhashed.c_str() << std::endl;
+
+			/*web::json::value jsonVerification;
 
 			bool rc3 = kvc.GetVerification(kid, algorithm, hash, signValue, jsonVerification);
 			if (rc3 == false) {
 				std::wcout << _XPLATSTR("Cant verify") << std::endl;
 				return 1;
-			}
+			}*/
 
 		//	std::wcout << _XPLATSTR("Verification  : ") << jsonVerification << std::endl;
 

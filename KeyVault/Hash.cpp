@@ -1,6 +1,6 @@
 #include "Hash.h"
 #include <sstream>
-
+#include <vector>
 
 std::string Hash::SHA256hash(std::string line) {
 	unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -106,6 +106,51 @@ std::string Hash::base64_encoder1(const std::string & in) {
 	}
 
 	return out;
+}
 
-} 
+
+
+std::string Hash:: base64_decoder1(const std::string & in) {
+
+	std::string out;
+
+	std::vector<int> T(256, -1);
+
+	unsigned int i;
+
+	for (i = 0; i < 64; i++) T[base64_url_alphabet1[i]] = i;
+
+
+
+	int val = 0, valb = -8;
+
+	for (i = 0; i < in.length(); i++) {
+
+		unsigned char c = in[i];
+
+		if (T[c] == -1) break;
+
+		val = (val << 6) + T[c];
+
+		valb += 6;
+
+		if (valb >= 0) {
+
+			out.push_back(char((val >> valb) & 0xFF));
+
+			valb -= 8;
+
+		}
+
+	}
+
+	return out;
+
+}
+std::string Hash::decodeURL(std::string line) {
+	std::string output = "";
+
+	output = base64_decoder1(line);
+	return output;
+}
 

@@ -24,11 +24,13 @@ public:
 	std::string SHA256hash(std::string line);
 	std::string SHA384hash(std::string line);
 	std::string SHA512hash(std::string line);
+	std::string decodeURL(std::string line);
 
 private:
 
 	
 	std::string base64_encoder1(const std::string &);
+	std::string base64_decoder1(const std::string & in);
 
 	
 
